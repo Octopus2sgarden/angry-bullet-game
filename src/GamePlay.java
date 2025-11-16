@@ -1,3 +1,16 @@
+/**
+ * FILE: GamePlay.java
+ * AUTHOR: SEDA GUNES
+ * STUDENT ID: 2025719036
+ * DATE: 19.10.2025
+ * AI ASSISTANTS: OpenAI's ChatGPT (GPT-5) , Google Gemini , Claude
+ * DESCRIPTION:
+ * This class handles the core game logic, including user input for aiming,
+ * simulating the projectile motion (Angry Bullet physics), drawing the game setup (obstacles/targets),
+ * managing collisions, and displaying the outcome. It allows the bullet to exit the top screen boundary
+ * and tracks its off-screen position.
+ */
+
 import java.awt.*;
 import java.io.File;
 import java.util.ArrayList;
@@ -28,7 +41,7 @@ public class GamePlay {
 
     private boolean isBulletMoving = false;
     private boolean isAwaitingRestart = false;
-    private String lastOutcomeMessage = "READY: Adjust V0 and Theta with mouse. Click to fire.";
+    private String lastOutcomeMessage = "Press Space to fire.";
 
     // Fırlatma noktası (İlk OBS'in sağ üst köşesi varsayılır: 50x50, 0,0'da)
     private final double SHOOTING_X = 50.0;
@@ -165,13 +178,13 @@ public class GamePlay {
 
 
             // 3. R TUŞU İLE YENİDEN BAŞLATMA KONTROLÜ
-            if (isAwaitingRestart && StdDraw.isKeyPressed('R')) {
+            if ( !isBulletMoving && isAwaitingRestart && StdDraw.isKeyPressed('R')) {
                 bullet = null;
                 isAwaitingRestart = false;
                 // Atış değerlerini temizle (Nişan alma moduna dönerken)
                 shotV0 = 0.0;
                 shotTheta = 0.0;
-                lastOutcomeMessage = "READY: Adjust V0 and Theta with mouse. Click to fire.";
+                lastOutcomeMessage = "Press Space to fire.";
             }
 
 
