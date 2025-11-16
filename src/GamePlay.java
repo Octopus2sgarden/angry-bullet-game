@@ -144,7 +144,7 @@ public class GamePlay {
             if (bullet != null) {
                 if (isBulletMoving) {
 
-                    drawTrajectory(shotV0, shotTheta);
+                    drawTrajectory(shotV0, shotTheta, bullet.getTime());
 
                     String outcome = runSimulationStep();
 
@@ -158,7 +158,7 @@ public class GamePlay {
 
                 } else {
                     // Mermi hareket etmeyi durdurdu (isAwaitingRestart TRUE)
-                    drawTrajectory(shotV0, shotTheta); // Sabit yörüngeyi tekrar çiz
+                    drawTrajectory(shotV0, shotTheta, bullet.getTime());
                     bullet.draw(); // Son konumunu çiz
                 }
             }
@@ -233,7 +233,7 @@ public class GamePlay {
 
         // 2. Draw the AIMING LINE (Nişan alma çizgisi)
         StdDraw.setPenColor(StdDraw.BLACK);
-        StdDraw.setPenRadius(0.003);
+        StdDraw.setPenRadius(0.007);
 
         double thetaRad = Math.toRadians(currentTheta);
         final double MAX_LINE_LENGTH = 100.0;
@@ -253,7 +253,7 @@ public class GamePlay {
      * Draws the predicted or fixed trajectory of the bullet using a dotted line.
      * Bu metot, v0 ve theta değerlerini parametre olarak alır.
      */
-    public void drawTrajectory(double v0, double thetaDegrees) {
+    public void drawTrajectory(double v0, double thetaDegrees, double tLimit) {
 
         // Define trajectory parameters
         double thetaRad = Math.toRadians(thetaDegrees);
@@ -267,20 +267,36 @@ public class GamePlay {
         double pointRadius = 1.0;
 
         // Yörüngeyi ekran sınırını geçene kadar veya 20 saniyeye kadar çiz. (5.0'dan artırıldı)
-        while (time < 20.0) {
+        // Yörüngeyi tLimit'e kadar çizer.
+        while (time < tLimit) {
+            // Zaman adımını uygula
             time += deltaTime;
+
+            // Eğer hesaplanan yeni zaman, çizim limitini aşıyorsa, çizimi durdur.
+            if (time > tLimit) {
+                time = tLimit; // Son noktayı çizmek için zamanı limitle.
+            }
+
             // Parabolik hareket formülleri
             double nextX = SHOOTING_X + vX * time;
             double nextY = SHOOTING_Y + vY0 * time - 0.5 * Bullet.g * time * time;
 
             // Sınır kontrolü
             if (nextY <= GROUND_LEVEL || nextY >= MAX_Y_INTERVAL || nextX >= MAX_X_INTERVAL) {
-                break;
+                // Eğer mermi durmuşsa (tLimit büyükse), bu noktadan sonra çizime devam etme.
+                if (tLimit > 10.0) { // tLimit 20.0 ise, yani tam yolu çiziyorsak
+                    break;
+                }
             }
 
             // Her 3. adımı çizerek kesik kesik bir çizgi efekti oluştur
             if (((int)(time / deltaTime)) % 3 == 0) {
                 StdDraw.filledCircle(nextX, nextY, pointRadius);
+            }
+
+            // Eğer zaman limiti aştıktan sonra son nokta çizildiyse, döngüyü kes.
+            if (time >= tLimit) {
+                break;
             }
         }
     }
@@ -291,7 +307,7 @@ public class GamePlay {
     public String runSimulationStep() {
         // Bu metot sadece mermi var olduğunda çağrılmalıdır.
         if (bullet == null) {
-            return "READY: Adjust V0 and Theta with mouse. Click to fire.";
+            return "Adjust V0 and Theta with mouse. Click space fire.";
         }
 
         // Animasyon hızı için küçük bir zaman adımı (0.05 saniye)

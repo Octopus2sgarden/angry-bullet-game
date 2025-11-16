@@ -107,4 +107,8 @@ public class Bullet {
     public double getRADIUS() {
         return RADIUS;
     }
+
+    public double getTime() {
+        return time;
+    }
 }
