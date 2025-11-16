@@ -13,7 +13,7 @@ public class GamePlay {
     private final double INITIAL_V0 = 180.0;
     private final double INITIAL_THETA = 45.0; // Degrees
     private final double MAX_X_INTERVAL = 700.0;
-    private final double MAX_Y_INTERVAL = 400.0; // StdDraw.setYscale(0, 400) ile eşleşmeli
+    private final double MAX_Y_INTERVAL = 400.0; //
     private final double GROUND_LEVEL = 0.0;
     private final double MAX_V0 = 300.0;
 
@@ -264,7 +264,7 @@ public class GamePlay {
         double deltaTime = 0.05;
 
         StdDraw.setPenColor(StdDraw.BLACK);
-        double pointRadius = 1.0;
+        double pointRadius = 3.0;
 
         // Yörüngeyi ekran sınırını geçene kadar veya 20 saniyeye kadar çiz. (5.0'dan artırıldı)
         // Yörüngeyi tLimit'e kadar çizer.
@@ -282,7 +282,7 @@ public class GamePlay {
             double nextY = SHOOTING_Y + vY0 * time - 0.5 * Bullet.g * time * time;
 
             // Sınır kontrolü
-            if (nextY <= GROUND_LEVEL || nextY >= MAX_Y_INTERVAL || nextX >= MAX_X_INTERVAL) {
+            if (nextY <= GROUND_LEVEL || nextX >= MAX_X_INTERVAL) {
                 // Eğer mermi durmuşsa (tLimit büyükse), bu noktadan sonra çizime devam etme.
                 if (tLimit > 10.0) { // tLimit 20.0 ise, yani tam yolu çiziyorsak
                     break;
