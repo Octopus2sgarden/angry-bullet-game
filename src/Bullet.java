@@ -1,8 +1,15 @@
-
 /**
- * Bullet class represents the projectile, handling its position, velocity,
- * and drawing itself on the screen.
+ * FILE: Bullet.java
+ * AUTHOR: SEDA GUNES
+ * STUDENT ID: 2025719036
+ * DATE: 19.10.2025
+ * AI ASSISTANTS: OpenAI's ChatGPT (GPT-5) , Google Gemini , Claude
+ * DESCRIPTION:
+ * This class represents the projectile (bullet) in the game. It stores the initial launch
+ * parameters (velocity and angle), tracks its current position (xCur, yCur), and manages
+ * the projectile motion calculation over time (t) using physics formulas.
  */
+
 public class Bullet {
     private double x0;      // Initial X position
     private double y0;      // Initial Y position

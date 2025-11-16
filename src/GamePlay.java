@@ -33,7 +33,7 @@ public class GamePlay {
     private double currentV0;
     private double currentTheta;
 
-    // Atış anındaki sabit hız ve açı değerleri (Yörüngeyi sabitlemek için)
+    // Constant speed and angle values at the moment of firing (to fix the trajectory)
     private double shotV0;
     private double shotTheta;
 
@@ -43,9 +43,9 @@ public class GamePlay {
     private boolean isAwaitingRestart = false;
     private String lastOutcomeMessage = "Press Space to fire.";
 
-    // Fırlatma noktası (İlk OBS'in sağ üst köşesi varsayılır: 50x50, 0,0'da)
+    // Firing point (assumed to be the top-right corner of the first OBS: 50x50 at 0,0)
     private final double SHOOTING_X = 50.0;
-    private final double SHOOTING_Y = 55.0; // Merminin yarıçapını hesaba katarak 50 + 5 = 55 yapıldı
+    private final double SHOOTING_Y = 55.0;  // Calculated as 50 (platform height) + 5 (bullet radius)
 
     // Constructor
     public GamePlay() {
@@ -61,10 +61,10 @@ public class GamePlay {
         // 1. StdDraw Settings
         StdDraw.enableDoubleBuffering();
 
-        // Canvas size ve Y scale tutarlı hale getirildi
+        /// Canvas size and Y scale adjusted to be consistent
         StdDraw.setCanvasSize(700, 400);
         StdDraw.setXscale(0, MAX_X_INTERVAL);
-        StdDraw.setYscale(0, MAX_Y_INTERVAL); // MAX_Y_INTERVAL 400 olarak kullanıldı
+        StdDraw.setYscale(0, MAX_Y_INTERVAL); // MAX_Y_INTERVAL is used as 400
 
         // 2. Load Game Objects
         loadGameObjects("config.txt");
@@ -73,10 +73,7 @@ public class GamePlay {
         controlLoop();
     }
 
-    // --- GAME LOGİC METHODS (loadGameObjects ve drawGameSetup değişmedi) ---
-
-    // ... loadGameObjects (değişmedi)
-
+    // --- GAME LOGİC METHODS  ---
     /**
      * Loads obstacles (OBS) and targets (TGT) from the configuration file.
      */
@@ -103,9 +100,9 @@ public class GamePlay {
                 // Define color shooting platform black obstacles are dark gray
                 Color obsColor;
                 if (obstacleCount == 0) {
-                    obsColor = StdDraw.BLACK;
+                    obsColor = StdDraw.BLACK; // The initial platform obstacle
                 } else {
-                    obsColor = StdDraw.DARK_GRAY;
+                    obsColor = StdDraw.DARK_GRAY; // Regular obstacles
                 }
 
                 // Create obstacles
@@ -146,17 +143,18 @@ public class GamePlay {
         while (true) {
             drawGameSetup();
 
-            // 1. Durum Kontrolleri ve Nişan Alma/Ateşleme
+            // 1. Status Checks and Aiming/Firing
             if (!isBulletMoving && !isAwaitingRestart) {
-                // Nişan Alma Modu: Kullanıcı girişi işle, nişan çizgisini ve YÖRÜNGE TAHMİNİNİ çiz
+                // Aiming Mode: Process user input, draw the aiming line
                 handleUserInput();
                 drawShootingLine();
             }
 
-            // 2. Mermi Hareketi ve Yörünge Çizimi (Atış Yapıldıysa)
+            // 2. Bullet Movement and Trajectory Drawing (If fired)
             if (bullet != null) {
                 if (isBulletMoving) {
 
+                    // Draw the fixed trajectory path up to the current time elapsed
                     drawTrajectory(shotV0, shotTheta, bullet.getTime());
 
                     String outcome = runSimulationStep();
@@ -167,28 +165,27 @@ public class GamePlay {
                         isAwaitingRestart = true;
                         lastOutcomeMessage = outcome;
                     }
-                    bullet.draw(); // Her adımda mermiyi çiz
+                    bullet.draw(); // Draw the bullet at every step
 
                 } else {
-                    // Mermi hareket etmeyi durdurdu (isAwaitingRestart TRUE)
+                    // Bullet has stopped (isAwaitingRestart is TRUE)
+                    // Draw the full trajectory path using the fixed shot values
                     drawTrajectory(shotV0, shotTheta, bullet.getTime());
-                    bullet.draw(); // Son konumunu çiz
+                    bullet.draw(); // Draw its final position
                 }
             }
 
 
-            // 3. R TUŞU İLE YENİDEN BAŞLATMA KONTROLÜ
+            // 3. RESTART CONTROL VIA 'R' KEY
             if ( !isBulletMoving && isAwaitingRestart && StdDraw.isKeyPressed('R')) {
                 bullet = null;
                 isAwaitingRestart = false;
-                // Atış değerlerini temizle (Nişan alma moduna dönerken)
+                // Clear the shot values (Return to aiming mode)
                 shotV0 = 0.0;
                 shotTheta = 0.0;
                 lastOutcomeMessage = "Press Space to fire.";
             }
-
-
-            // Display the outcome message at the top left
+            // Display the outcome message at the top
             displayOutcome(lastOutcomeMessage);
 
             StdDraw.show();
@@ -218,12 +215,12 @@ public class GamePlay {
 
         // 4. Launch the bullet when the mouse is pressed AND no bullet is currently active.
         if (StdDraw.isKeyPressed(32) && bullet == null) {
-            // ATIS ANINDAKI DEGERLERI KAYDET
+            // SAVE THE VALUES AT THE MOMENT OF SHOT
             shotV0 = currentV0;
             shotTheta = currentTheta;
 
             bullet = new Bullet(SHOOTING_X, SHOOTING_Y, shotV0, shotTheta);
-            isBulletMoving = true; // Mermiyi hareket ettirmeye başla
+            isBulletMoving = true; // Start the bullet movement
         }
     }
 
@@ -238,20 +235,21 @@ public class GamePlay {
         double textX = 25;
         double textY = 25;
 
-        // Açı ve Hız gösterimi
+        // 1. Display Angle (a) and Velocity (v)
         StdDraw.text(textX, textY + 5, String.format("a: %.1f°", currentTheta));
         StdDraw.text(textX, textY - 5, String.format("v: %.1f", currentV0));
 
         StdDraw.setFont();
 
-        // 2. Draw the AIMING LINE (Nişan alma çizgisi)
+        // 2. Draw the AIMING LINE
         StdDraw.setPenColor(StdDraw.BLACK);
         StdDraw.setPenRadius(0.007);
 
         double thetaRad = Math.toRadians(currentTheta);
         final double MAX_LINE_LENGTH = 100.0;
+        // Scale the line length relative to MAX_V0
         double lineLength = (currentV0 / MAX_V0) * MAX_LINE_LENGTH;
-        // Çizginin minimum uzunluğunu sıfır hızda bile görünür olması için ayarla
+        // Set a minimum line length to keep it visible even at low velocity
         lineLength = Math.max(5.0, lineLength);
 
 
@@ -263,8 +261,11 @@ public class GamePlay {
     }
 
     /**
-     * Draws the predicted or fixed trajectory of the bullet using a dotted line.
-     * Bu metot, v0 ve theta değerlerini parametre olarak alır.
+     * Draws the predicted or fixed trajectory of the bullet using dotted circles.
+     * This method takes the launch V0 and Theta values as parameters.
+     * @param v0 Initial velocity.
+     * @param thetaDegrees Launch angle in degrees.
+     * @param tLimit The time limit up to which the trajectory should be drawn.
      */
     public void drawTrajectory(double v0, double thetaDegrees, double tLimit) {
 
@@ -279,35 +280,34 @@ public class GamePlay {
         StdDraw.setPenColor(StdDraw.BLACK);
         double pointRadius = 3.0;
 
-        // Yörüngeyi ekran sınırını geçene kadar veya 20 saniyeye kadar çiz. (5.0'dan artırıldı)
-        // Yörüngeyi tLimit'e kadar çizer.
+        // Draw the trajectory until it exceeds the screen boundary or reaches the time limit
         while (time < tLimit) {
-            // Zaman adımını uygula
+            // Advance the time step
             time += deltaTime;
 
-            // Eğer hesaplanan yeni zaman, çizim limitini aşıyorsa, çizimi durdur.
+            // If the new calculated time exceeds the drawing limit, limit the time
             if (time > tLimit) {
-                time = tLimit; // Son noktayı çizmek için zamanı limitle.
+                time = tLimit; // Limit time to draw the last point
             }
 
-            // Parabolik hareket formülleri
+            // Parabolic motion formulas
             double nextX = SHOOTING_X + vX * time;
             double nextY = SHOOTING_Y + vY0 * time - 0.5 * Bullet.g * time * time;
 
-            // Sınır kontrolü
+            // Boundary check
             if (nextY <= GROUND_LEVEL || nextX >= MAX_X_INTERVAL) {
-                // Eğer mermi durmuşsa (tLimit büyükse), bu noktadan sonra çizime devam etme.
-                if (tLimit > 10.0) { // tLimit 20.0 ise, yani tam yolu çiziyorsak
-                    break;
+                // If the bullet has stopped (tLimit is large, meaning drawing the full path)
+                if (tLimit > 10.0) { // If tLimit is 20.0, we are drawing the full path
+                    break;// Stop drawing beyond the boundary
                 }
             }
 
-            // Her 3. adımı çizerek kesik kesik bir çizgi efekti oluştur
+            // Draw every 3rd step to create a dashed line effect
             if (((int)(time / deltaTime)) % 3 == 0) {
                 StdDraw.filledCircle(nextX, nextY, pointRadius);
             }
 
-            // Eğer zaman limiti aştıktan sonra son nokta çizildiyse, döngüyü kes.
+            // If the time limit has been reached, break the loop after drawing the last point
             if (time >= tLimit) {
                 break;
             }
@@ -318,50 +318,50 @@ public class GamePlay {
      * Returns a String indicating the game state ("MOVING" or the outcome message).
      */
     public String runSimulationStep() {
-        // Bu metot sadece mermi var olduğunda çağrılmalıdır.
+        // This method should only be called when a bullet exists.
         if (bullet == null) {
             return "Adjust V0 and Theta with mouse. Click space fire.";
         }
 
-        // Animasyon hızı için küçük bir zaman adımı (0.05 saniye)
+        // Small time step for animation speed (0.08 seconds)
         double deltaTime = 0.08;
 
-        // 1. Merminin konumunu güncelle
+        // 1. Update the bullet's position
         bullet.updatePosition(deltaTime);
 
-        // 2. Çarpışma ve Sınır Kontrolleri
+        // 2. Collision and Boundary Checks
 
-        // A) Hedef Vuruldu mu? (En yüksek öncelik)
+        // A) Was the Target hit? (Highest priority)
         for (Shape target : targets) {
             if (target.isColliding(bullet)) {
-                // Mermiyi yok etmiyoruz, sadece hareketini durduruyoruz ve son konumunda kalmasını sağlıyoruz
+                // We don't destroy the bullet, just stop its movement and keep it at the final position
                 return "Congratulations: You hit the target! (SUCCESS)";
             }
         }
 
-        // B) Engele Çarptı mı?
+        // B) Did it hit an Obstacle?
         for (Shape obstacle : obstacles) {
             if (obstacle.isColliding(bullet)) {
                 return "Hit an obstacle! Press 'r' to shoot again.(FAILURE)";
             }
         }
 
-        // C) Maksimum X Sınırını Aştı mı?
+        // C) Did it exceed the Maximum X boundary?
         if (bullet.getxCur() > MAX_X_INTERVAL) {
-            return "Max X interval exceeded! (FAILURE)";
+            return "Max X interval exceeded! Press 'r' to shoot again. (FAILURE)";
         }
 
-        // E) Yere Düştü mü? (Y koordinatı 0 veya altına indi mi?)
+        // E) Did it hit the Ground? (Y coordinate went to 0 or below, considering the bullet's radius)
         if (bullet.getyCur() - bullet.getRadius() <= GROUND_LEVEL) {
             return "Hit the ground! Press 'r' to shoot again. (FAILURE)";
         }
 
-        // Hiçbir koşul sağlanmadıysa, mermi hareket etmeye devam ediyor.
+        // If no condition is met, the bullet continues to move.
         return "MOVING";
     }
 
     /**
-     * Displays the current outcome or status message on the top-left corner of the screen.
+     * Displays the current outcome or status message on the top - center of the screen.
      */
     public void displayOutcome(String message) {
         double textX = MAX_X_INTERVAL / 2.0;
@@ -374,7 +374,7 @@ public class GamePlay {
 
         if (message.startsWith("RESULT:")) {
             String outcome = message.replace("RESULT: ", "");
-            // Sonuç mesajlarına göre yeniden ateşleme talimatını ekle
+            // Add the restart instruction based on the outcome message
             if (message.contains("FAILURE")) {
                 displayMessage = outcome + " (Press 'R' to shoot again.)";
             } else if (message.contains("SUCCESS")) {
@@ -385,7 +385,7 @@ public class GamePlay {
         } else if (message.contains("READY")) {
             displayMessage = message;
         } else if (message.equals("MOVING")) {
-            // Mermi hareket ederken mesaj gösterme
+            // Do not display a message while the bullet is moving
             displayMessage = "";
         }
 
