@@ -1,7 +1,6 @@
 /**
  * FILE: Main.java
  * AUTHOR: SEDA GUNES
- * STUDENT ID: 2025719036
  * DATE: 19.10.2025
  * AI ASSISTANTS: OpenAI's ChatGPT (GPT-5) , Google Gemini , Claude
  * DESCRIPTION:
